@@ -1,20 +1,36 @@
-using MiniCommerce.Api.Services;
-
-
-
+﻿using MiniCommerce.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSingleton<IProductService, InMemoryProductService>();
-// Add services to the container.
 
+// Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+// Services
+builder.Services.AddSingleton<IProductService, InMemoryProductService>();
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks();
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Middleware
+app.UseExceptionHandler("/error");
+app.Map("/error", () => Results.Problem("Unexpected error occurred"));
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -22,12 +38,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/health");
 
-app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
-
+app.MapGet("/", () => Results.Ok(new { status = "ok", message = "MiniCommerce API Running 🚀" }));
 
 app.Run();
