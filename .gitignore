@@ -13,3 +13,13 @@ appsettings.Development.json
 
 # Logs
 *.log
+
+
+# Publish / Deployment outputs
+publish/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
